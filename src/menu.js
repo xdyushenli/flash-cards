@@ -22,6 +22,7 @@ export default class Menu extends React.Component {
                             }}
                                 type='home'
                             />
+                            {/* todo 为该选项增加默认选中的状态 */}
                             <span className='menu-text'>Home</span>
                         </Link>
                     </AntdMenu.Item>

@@ -1,4 +1,4 @@
-exports.requestConfig = {
+const requestConfig = {
     '/': {
         handler: 'start',
         method: 'get',
@@ -15,4 +15,12 @@ exports.requestConfig = {
         handler: 'show',
         method: 'get',
     },
+    '/signUp': {
+        handler: 'signUp',
+        method: 'post',
+    }
+};
+
+module.exports = {
+    requestConfig
 };

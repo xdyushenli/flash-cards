@@ -1,7 +1,7 @@
-let http = require('http');
-let url = require('url');
+const http = require('http');
+const url = require('url');
 
-exports.startServer = function (route) {
+function startServer(route) {
     http.createServer(function (request, response) {
         // 解析路径
         let pathname = url.parse(request.url).pathname;
@@ -9,5 +9,9 @@ exports.startServer = function (route) {
         route(pathname, request, response);
     }).listen(8888);
 
-    console.log('server has started!')
+    console.log('server has started!');
+}
+
+module.exports = {
+    startServer,
 }
