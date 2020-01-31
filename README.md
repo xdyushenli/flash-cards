@@ -66,3 +66,34 @@ This section has moved here: https://facebook.github.io/create-react-app/docs/de
 ### `yarn build` fails to minify
 
 This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
+
+# 开发进度
+## 前端
+1. 登录界面
+2. 为删除卡片选项添加必要的提示
+3. 抽卡界面
+4. 接口绑定
+5. 引入 redux 进行数据管理
+
+## 后端
+1. 规范接口格式
+```json
+{
+    "code": "",
+    "msg": "",
+    "data": {},
+}
+```
+
+2. 剩下的5个接口
+3. 编写本地服务器, 不使用数据库
+4. 进行数据迁移
+5. 处理并发, 只使用一条 MongoDB 连接的话靠谱吗?
+
+## 踩坑记录
+1. fs模块读取文件时路径要加 __dirname, fs模块读取文件时根目录并不是当前文件所在的目录, 而是在命令行执行该文件时, 命令行所在的目录。
+2. MongoDB 的连接最大连接数一般为5。
+3. MongoDB 连接可复用。
+4. 使用 MongoDB 的 Schema 和 Model 会比直接操作数据库更简便。
+5. 调用 Model 函数编译 Schema 的 Mongoose 必须和创建连接的 Mongoose 是同一个, 不然对数据库的操作不会起作用。
+6. 调用 Model 函数的第一个参数是该 Model 所要绑定的集合名称。

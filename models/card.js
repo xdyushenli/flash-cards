@@ -3,9 +3,14 @@ const { mongoInstance } = require('../server/db');
 
 const CardSchema = new Schema({
     userID: {
-        type: Schema.Types.ObjectId, 
-        ref: 'user',
+        type: String, 
         required: true,
+    },
+    type: {
+        type: Number,
+        required: true,
+        // 0 代表通识卡片, 1 代表代码卡片
+        enum: [0, 1],
     },
     title: String,
     content: String,
