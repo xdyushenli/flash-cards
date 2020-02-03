@@ -7,11 +7,19 @@
     <title>Document</title>
 </head>
 <body>
-    <form action="/signUp" method="POST">
-        <span>用户名</span>
-        <input type="text" name="username" /><br>
-        <span>密码</span>
-        <input type="text" name="password">
+    <form action="/deleteCard" method="post">
+        <span>卡片id</span>
+        <input type="text" name="cardId" /><br>
+        <span>类型</span>
+        <input type="radio" name="type" value=1>
+        <input type="radio" name="type" value=0>
+        <span>标题</span>
+        <input type="text" name="title">
+        <span>内容</span>
+        <input type="text" name="content">
+        <span>未知</span>
+        <input type="radio" name="unknown" value=true>
+        <input type="radio" name="unknown" value=false>
         <button type="submit">提交</button>
     </form>
 </body>

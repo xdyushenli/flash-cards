@@ -1,108 +1,170 @@
-const mongoose = require('mongoose');
-const url = "mongodb://localhost:27017/flash-cards";
+const sqlite3 = require('sqlite3');
+const crypto = require('crypto');
 
-// 连接数据库
-function connectMongoDB(address) {
-    // 开启 debug
-    if (process.env.NODE_ENV === 'development') {
-        mongoose.set('debug', true);
+// 新建并打开数据库
+const database = new sqlite3.Database('./db/cards.db', function (err) {
+    if (err) {
+        throw err;
+    } else {
+        console.log('database connect successed!');
+
+        // 创建用户表
+        database.run(`CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            password TEXT NOT NULL,
+            salt TEXT NOT NULL
+        )`)
+
+        // 创建卡片表
+        database.run(`CREATE TABLE IF NOT EXISTS cards (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            userId TEXT NOT NULL,
+            type INT NOT NULL,
+            unknown BOOLEAN NOT NULL,
+            title TEXT,
+            content TEXT,
+            FOREIGN KEY (userId)
+            REFERENCES users (id)
+        )`)
     }
+});
 
-    // 未连接到数据库时操作直接返回失败
-    mongoose.set('bufferCommands', false);
+// 生成加密数据用的盐
+function generateSalt(length = 256) {
+    return crypto.randomBytes(length).toString('hex');
+}
 
-    try {
-        mongoose.connect(address, {
-            useUnifiedTopology: true,
-            useNewUrlParser: true,
-            // 未连接到数据库时操作直接返回失败
-            bufferMaxEntries: 0,
-        })
+// 使用盐加密数据
+function sha512(str, salt) {
+    return crypto.createHmac('sha512', salt).update(str).digest('hex');
+}
 
-        const db = mongoose.connection;
+// 加密函数, 用于加密敏感信息
+function encryptData(str) {
+    // 生成盐
+    const salt = generateSalt(256);
+    // 对数据进行加密
+    const hash = sha512(str, salt);
 
-        db.on('error', (error) => {
-            console.log(`MongoDB connecting failed: ${error}`);
-        })
-        db.once('open', () => {
-            console.log('MongoDB connecting succeeded!');
-        })
-
-        return db;
-    } catch (error) {
-        console.log(`MongoDB connecting failed: ${error}`);
+    return {
+        salt,
+        hash,
     }
 }
 
-// 数据库实例
-const mongoInstance = connectMongoDB(url);
-
-// 查询数据
-function readData(collectionName, filter) {
+// 根据用户名获取用户信息
+function __getUserInfoByUsername(username) {
     return new Promise((resolve, reject) => {
-        mongoInstance.collection(collectionName).find(filter).toArray(function (err, result) {
+        database.get(`SELECT salt, password FROM users WHERE username = ?`, username, function (err, result) {
             if (err) {
-                console.log('数据读取失败!');
-                reject(err)
+                reject(err);
             }
 
-            console.log('数据读取成功!');
-            resolve(result);
+            resolve(result)
         })
+    })
+}
+
+// 校验用户
+function testUser(username, password) {
+    // 根据用户名查找用户
+    return __getUserInfoByUsername(username)
+    .then((result) => {
+        // 判断用户名和密码是否符合
+        if (!result) {
+            return Promise.reject(false);
+        }
+
+        const { salt: db_salt, password: db_password } = result;
+
+        if (sha512(password, db_salt) !== db_password) {
+            return Promise.reject(false);
+        } else {
+            return Promise.resolve(true);
+        }
     });
 }
 
-// 修改数据
-function updateData(collectionName, filter, data) {
+// 创建用户
+function createUser(username, password) {
+    return __getUserInfoByUsername(username)
+    .then((result) => {
+        // 用户已存在
+        if (result) {
+            return new Promise.reject(false);
+        }
+
+        // 用户不存在
+        return new Promise((resolve, reject) => {
+            let { salt, hash: db_password } = encryptData(password);
+
+            database.run(`INSERT INTO users (username, salt, password) VALUES (?, ?, ?)`, [username, salt, db_password], (err) => {
+                if (err) {
+                    reject(err);
+                }
+
+                resolve(true);
+            })
+        });
+    })
+}
+
+// 创建卡片
+function createCard(userId, type, title, content, unknown) {
     return new Promise((resolve, reject) => {
-        mongoInstance.collection(collectionName).updateMany(filter, data, function (err, result) {
+        database.run(`INSERT INTO cards (userId, type, title, content, unknown) VALUES (?, ?, ?, ?, ?)`, [userId, type, title, content, unknown], err => {
             if (err) {
-                console.log('数据修改失败!');
-                reject(err)
+                reject(err);
             }
 
-            console.log('数据修改成功!');
-            resolve(result);
+            resolve(true);
         })
-    });
+    })
 }
 
-// 创建数据
-function createData(collectionName, data) {
-    data = Array.isArray(data) ? data : [data];
-
+// 读取卡片
+function readCards(userId) {
     return new Promise((resolve, reject) => {
-        mongoInstance.collection(collectionName).insertMany(data, function (err, result) {
+        database.all(`SELECT * FROM cards WHERE userId = ?`, userId, (err, result) => {
             if (err) {
-                console.log('数据创建失败!');
-                reject(err)
+                reject(err);
             }
 
-            console.log('数据创建成功!');
             resolve(result);
         })
-    });
+    })
 }
 
-// 删除数据
-function deleteData(collectionName, filter) {
+// 修改卡片
+function updateCard(cardId, type, title, content, unknown) {
     return new Promise((resolve, reject) => {
-        mongoInstance.collection(collectionName).deleteMany(filter, function (err, result) {
+        database.run(`UPDATE cards SET type = ?, title = ?, content = ?, unknown = ? WHERE id = ?`, [type, title, content, unknown, cardId], err => {
             if (err) {
-                console.log("数据删除失败!");
-                reject(err)
+                reject(err);
             }
 
-            console.log('数据删除成功!');
-            resolve(result);
+            resolve(true);
         })
-    });
+    })
 }
 
-module.exports = {
-    mongoInstance,
-    readData,
-    updateData,
-    createData,
-    deleteData,
+// 删除卡片
+function deleteCard(cardId) {
+    return new Promise((resolve, reject) => {
+        database.run(`DELETE FROM cards WHERE id = ?`, cardId, err => {
+            if (err) {
+                reject(err);
+            }
+
+            resolve(true);
+        })
+    })
 }
+
+exports.db_testUser = testUser;
+exports.db_createUser = createUser;
+exports.db_createCard = createCard;
+exports.db_readCards = readCards;
+exports.db_updateCard = updateCard;
+exports.db_deleteCard = deleteCard;

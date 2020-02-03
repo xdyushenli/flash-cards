@@ -97,3 +97,5 @@ This section has moved here: https://facebook.github.io/create-react-app/docs/tr
 4. 使用 MongoDB 的 Schema 和 Model 会比直接操作数据库更简便。
 5. 调用 Model 函数编译 Schema 的 Mongoose 必须和创建连接的 Mongoose 是同一个, 不然对数据库的操作不会起作用。
 6. 调用 Model 函数的第一个参数是该 Model 所要绑定的集合名称。
+7. 对于 sqlite 的 API 来说, run 方法通常用于插入、删除以及更新, get 方法用于查询单条数据, all 方法用于查询多条数据。
+8. 在运行上述 sqlite 方法时, 需要注意, 不能使用 `${}` 这种语法将值插入到第一个参数中, 而应该使用 `?` 作为引用, 并将值放在第二个参数中, 不然会报错。

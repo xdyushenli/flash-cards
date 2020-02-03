@@ -18,9 +18,27 @@ const requestConfig = {
     '/signUp': {
         handler: 'signUp',
         method: 'post',
+    },
+    '/logIn': {
+        handler: 'logIn',
+        method: 'post',
+    },
+    '/createCard': {
+        handler: 'createCard',
+        method: 'post',
+    },
+    '/readCards': {
+        handler: 'readCards',
+        method: 'post',
+    },
+    '/updateCard': {
+        handler: 'updateCard',
+        method: 'post',
+    },
+    '/deleteCard': {
+        handler: 'deleteCard',
+        method: 'post',
     }
 };
 
-module.exports = {
-    requestConfig
-};
+module.exports.requestConfig = requestConfig
