@@ -1,9 +1,10 @@
 import React from 'react';
 import { Form, Input, Button, Icon } from 'antd';
+import { withRouter } from 'react-router-dom'
 
 class Login extends React.Component {
-    handleSubmit = e => {
-
+    constructor(props) {
+        super(props);
     }
 
     render() {
@@ -17,7 +18,7 @@ class Login extends React.Component {
                 width: '100vw',
                 height: '100vh',
             }}>
-                <Form onSubmit={this.handleSubmit} style={{
+                <Form onSubmit={this.props.onSubmit} style={{
                     maxWidth: '300px',
                     flexGrow: '1',
                 }}>
@@ -59,4 +60,4 @@ class Login extends React.Component {
     }
 }
 
-export default Form.create({})(Login)
+export default withRouter(Form.create({})(Login))

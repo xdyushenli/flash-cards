@@ -16,7 +16,7 @@ export default class Menu extends React.Component {
                     }}
                 >
                     <AntdMenu.Item>
-                        <Link to='/'>
+                        <Link to='/home'>
                             <Icon style={{
                                 fontSize: '16px',
                             }}
